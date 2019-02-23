@@ -258,7 +258,7 @@ public class TouchInput : MonoBehaviour
 	///   Calculates Pinch and Turn - This should be used inside LateUpdate
 	///   http://wiki.unity3d.com/index.php/DetectTouchMovement
 	/// </summary>
-	static public void Calculate () {
+	private void Calculate () {
 		pinchDistance = pinchDistanceDelta = 0;
 		turnAngle = turnAngleDelta = 0;
  
