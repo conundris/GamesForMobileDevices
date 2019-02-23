@@ -20,7 +20,25 @@ public class TouchInput : MonoBehaviour
     const float pinchRatio = 1;
     const float minPinchDistance = 1.5f;
     
-    public float panSpeed = 0.001f;
+    public float panSpeed = 0.005f;
+    
+    /// <summary>
+    ///   The delta of the angle between two touch points
+    /// </summary>
+    private float turnAngleDelta;
+    /// <summary>
+    ///   The angle between two touch points
+    /// </summary>
+    private float turnAngle;
+ 
+    /// <summary>
+    ///   The delta of the distance between two touch points that were distancing from each other
+    /// </summary>
+    private float pinchDistanceDelta;
+    /// <summary>
+    ///   The distance between two touch points that were distancing from each other
+    /// </summary>
+    private float pinchDistance;
     
     Vector2?[] oldTouchPositions = {
         null,
@@ -111,7 +129,7 @@ public class TouchInput : MonoBehaviour
 					else
 					{
 						var touchDeltaPosition = Input.touches[0].deltaPosition;
-						transform.Translate(-touchDeltaPosition.x * 0.001f, -touchDeltaPosition.y * 0.001f, 0);
+						transform.Translate(-touchDeltaPosition.x * panSpeed, -touchDeltaPosition.y * panSpeed, 0);
 					}
 				}
 			}
@@ -235,25 +253,7 @@ public class TouchInput : MonoBehaviour
 		    transform.position += Vector3.forward * desiredDistance;
 	    }
     }
-
-	/// <summary>
-	///   The delta of the angle between two touch points
-	/// </summary>
-	static public float turnAngleDelta;
-	/// <summary>
-	///   The angle between two touch points
-	/// </summary>
-	static public float turnAngle;
- 
-	/// <summary>
-	///   The delta of the distance between two touch points that were distancing from each other
-	/// </summary>
-	static public float pinchDistanceDelta;
-	/// <summary>
-	///   The distance between two touch points that were distancing from each other
-	/// </summary>
-	static public float pinchDistance;
- 
+    
 	/// <summary>
 	///   Calculates Pinch and Turn - This should be used inside LateUpdate
 	///   http://wiki.unity3d.com/index.php/DetectTouchMovement
