@@ -1,15 +1,16 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 
 public class TouchInput : MonoBehaviour
 {
+	public Toggle gyroToggle;
+	private Gyroscope gyro;
+	
     private float dist;
     private GameObject selectedObject = null;
 
     private bool dragging = false;
-    private bool rotating = false;
-    private bool pinching = false;
-    private bool swiping = false;
     
     const float zoomRate = 50.0f;
     
@@ -31,85 +32,131 @@ public class TouchInput : MonoBehaviour
 
     
     private float pt;
+
+    void Start()
+    {
+	    gyro = Input.gyro;
+
+	    gyro.enabled = false;
+	    
+	    //https://docs.unity3d.com/ScriptReference/UI.Toggle-onValueChanged.html
+	    gyroToggle.onValueChanged.AddListener(delegate { gyroToggleChanged(gyroToggle.isOn); });
+    }
+
+    void gyroToggleChanged(bool isOn)
+    {
+	    gyro.enabled = isOn;
+
+	    if (!gyro.enabled)
+	    {
+		    Camera.main.transform.rotation = new Quaternion();
+	    }
+
+    }
     
     void Update() {
         Vector3 position;
-        
-        if (Input.touchCount == 0) {
-            oldTouchPositions[0] = null;
-            oldTouchPositions[1] = null;
-        }
-        
-        if (Input.touchCount < 1) {
-            dragging = false; 
-            return;
-        }
 
-        if (Input.touches[0].phase == TouchPhase.Began)
+        if (gyro.enabled)
         {
-	        if (Input.touchCount == 1)
-	        {
-		        var touchZeroPos = Input.touches[0].position;
-
-		        var ray = Camera.main.ScreenPointToRay(touchZeroPos);
-
-		        if (Physics.Raycast(ray, out var hit))
-		        {
-			        if (hit.transform.gameObject.CompareTag("Selectable"))
-			        {
-				        selectedObject = hit.transform.gameObject;
-
-				        selectedObject.GetComponent<Selectable>().ChangeColor(true);
-
-				        dist = hit.transform.position.z - transform.position.z;
-
-				        dragging = true;
-			        }
-		        }
-	        }
-        } else if (Input.touches[0].phase == TouchPhase.Moved) {
-            if (Input.touchCount == 1)
-            {
-                if (selectedObject != null && dragging)
-                {
-                    position = new Vector3(Input.touches[0].position.x, Input.touches[0].position.y, dist);
-                    position = Camera.main.ScreenToWorldPoint(position);
-                    selectedObject.gameObject.GetComponent<Transformable>().Move(position);
-                }
-                else
-                {
-                    var touchDeltaPosition = Input.touches[0].deltaPosition;
-                    transform.Translate(-touchDeltaPosition.x * 0.001f, -touchDeltaPosition.y * 0.001f, 0);
-                }
-            }
+	        Camera.main.transform.rotation  = gyro.attitude;
         }
-        else if (Input.touches[0].phase == TouchPhase.Ended)
+        else
         {
-            if (selectedObject != null)
-            {
-                selectedObject.GetComponent<Selectable>().ChangeColor(false);
-                selectedObject = null;
-                dragging = false;
-            }   
+			if (Input.touchCount == 0) {
+				oldTouchPositions[0] = null;
+				oldTouchPositions[1] = null;
+			}
+			
+			if (Input.touchCount < 1) {
+				dragging = false; 
+				return;
+			}
+	
+			if (Input.touches[0].phase == TouchPhase.Began)
+			{
+				if (Input.touchCount == 1)
+				{
+					var touchZeroPos = Input.touches[0].position;
+	
+					var ray = Camera.main.ScreenPointToRay(touchZeroPos);
+	
+					if (Physics.Raycast(ray, out var hit))
+					{
+						if (hit.transform.gameObject.CompareTag("Selectable"))
+						{
+							selectedObject = hit.transform.gameObject;
+	
+							selectedObject.GetComponent<Selectable>().ChangeColor(true);
+	
+							dist = hit.transform.position.z - transform.position.z;
+	
+							dragging = true;
+						} else if (hit.transform.gameObject.GetComponent<Accelerator>() != null)
+						{
+							var acceleratorObject = hit.transform.gameObject.GetComponent<Accelerator>();
+							acceleratorObject.enabled = !acceleratorObject.enabled;
+						}
+					}
+				}
+			} else if (Input.touches[0].phase == TouchPhase.Moved) {
+				if (Input.touchCount == 1)
+				{
+					if (selectedObject != null && dragging)
+					{
+						position = new Vector3(Input.touches[0].position.x, Input.touches[0].position.y, dist);
+						position = Camera.main.ScreenToWorldPoint(position);
+						selectedObject.gameObject.GetComponent<Transformable>().Move(position);
+					}
+					else
+					{
+						var touchDeltaPosition = Input.touches[0].deltaPosition;
+						transform.Translate(-touchDeltaPosition.x * 0.001f, -touchDeltaPosition.y * 0.001f, 0);
+					}
+				}
+			}
+			else if (Input.touchCount == 4)
+			{
+				// https://answers.unity.com/questions/899037/applicationquit-not-working-1.html
+				#if UNITY_EDITOR
+				// Application.Quit() does not work in the editor so
+				// UnityEditor.EditorApplication.isPlaying need to be set to false to end the game
+				UnityEditor.EditorApplication.isPlaying = false;
+				#else
+                         Application.Quit();
+				#endif
+			}
+			else if (Input.touches[0].phase == TouchPhase.Ended)
+			{
+				if (selectedObject != null)
+				{
+					selectedObject.GetComponent<Selectable>().ChangeColor(false);
+					selectedObject = null;
+					dragging = false;
+				}   
+			}
         }
     }
     
     void LateUpdate() {
 	    float pinchAmount = 0;
 	    Quaternion desiredRotation = transform.rotation;
- 
-	    Calculate();
-	    
-	    if (Input.touchCount == 2)
+
+	    if (!gyro.enabled)
 	    {
-		    if (Mathf.Abs(pinchDistanceDelta) > 0) { // zoom
-			    pinchAmount = pinchDistanceDelta;
-			    Debug.Log("Is Pinch. -> " + pinchDistanceDelta);
-			    Scale();
-		    }
+		    Calculate();
+	    
+		    if (Input.touchCount == 2)
+		    {
+			    if (Mathf.Abs(pinchDistanceDelta) > 0) { // zoom
+				    pinchAmount = pinchDistanceDelta;
+				    Debug.Log("Is Pinch. -> " + pinchDistanceDelta);
+				    Scale();
+			    }
  
-		    if (Mathf.Abs(turnAngleDelta) > 0) { // rotate
-			    Rotate(Input.GetTouch(0), Input.GetTouch(1));
+			    if (Mathf.Abs(turnAngleDelta) > 0) { // rotate
+				    Rotate(Input.GetTouch(0), Input.GetTouch(1));
+			    }
 		    }
 	    }
     }
@@ -123,8 +170,8 @@ public class TouchInput : MonoBehaviour
         oldTouchDistance = oldTouchVector.magnitude;
     
     
-        Vector2 newTouchVector = (touchZero.position - touchOne.position) * 0.005f;
-        float newTouchDistance = newTouchVector.magnitude;
+        var newTouchVector = (touchZero.position - touchOne.position) * 0.005f;
+        var newTouchDistance = newTouchVector.magnitude;
 
         if (selectedObject != null)
         {

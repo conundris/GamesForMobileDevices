@@ -14,6 +14,6 @@ public class Accelerator : MonoBehaviour
     void Update()
     {        
         //Accelerator Movement
-        transform.Translate(Input.acceleration.x, 0, -Input.acceleration.z);
+        transform.Translate(Input.acceleration.x * 0.05f, 0, -Input.acceleration.z * 0.05f);
     }
 }
