@@ -8,4 +8,7 @@ EditorBuildSettings:
   - enabled: 0
     path: 
     guid: 00000000000000000000000000000000
+  - enabled: 1
+    path: Assets/Scenes/AdMob.unity
+    guid: 773b05d3804954a4694bb1bc641f497b
   m_configObjects: {}

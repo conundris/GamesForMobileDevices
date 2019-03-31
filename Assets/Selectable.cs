@@ -2,14 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.iOS;
 using UnityEngine.UI;
 
 public class Selectable : MonoBehaviour
 {
-    [Tooltip("Automatically read the DefaultColor from the material?")]
-    public bool AutoGetDefaultColor;
-
     [Tooltip("The default color given to the materials")]
     public Color DefaultColor = Color.white;
 
@@ -33,14 +29,11 @@ public class Selectable : MonoBehaviour
     {
         if (cachedRenderer == null) cachedRenderer = GetComponent<Renderer>();
 
-        if (AutoGetDefaultColor == true)
-        {
-            var material0 = cachedRenderer.sharedMaterial;
+        var material0 = cachedRenderer.sharedMaterial;
 
-            if (material0 != null)
-            {
-                DefaultColor = material0.color;
-            }
+        if (material0 != null)
+        {
+            DefaultColor = material0.color;
         }
 
         if (CloneMaterials == true)
